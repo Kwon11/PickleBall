@@ -1,4 +1,4 @@
-import { formatDay } from 'date-fns';
+import { format } from 'date-fns';
 
 let closure = 0;
 const DayCell = (props) => {
@@ -6,7 +6,7 @@ const DayCell = (props) => {
     console.log('daycell props', props);
     closure++;
   }
-  return <td {...props.tdProps}></td>
+  return <td className={'rdp-day'}>{format(props.day.date, 'd')}</td>
 }
 
 export default DayCell;
