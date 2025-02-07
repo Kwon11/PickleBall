@@ -4,6 +4,7 @@ import DayCell from "./DayCell";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { EventForm } from '@/components/EventForm';
 
 const Home = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -55,11 +56,22 @@ const Home = () => {
               Sign Out
             </button>
           </div>
-          <DayPicker
-            components={{
-              Day: DayCell,
-            }}
-          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h2 className="text-xl font-bold mb-4">Create Event</h2>
+              <EventForm />
+            </div>
+            
+            <div>
+              <h2 className="text-xl font-bold mb-4">Calendar</h2>
+              <DayPicker
+                components={{
+                  Day: DayCell,
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
