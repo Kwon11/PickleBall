@@ -1,6 +1,5 @@
 "use client";
 import { DayPicker } from "react-day-picker";
-import DayCell from "./DayCell";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
@@ -60,16 +59,10 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h2 className="text-xl font-bold mb-4">Create Event</h2>
-              <EventForm />
             </div>
             
             <div>
-              <h2 className="text-xl font-bold mb-4">Calendar</h2>
-              <DayPicker
-                components={{
-                  Day: DayCell,
-                }}
-              />
+              <h2 className="text-xl font-bold mb-4">Events View</h2>
             </div>
           </div>
         </div>
