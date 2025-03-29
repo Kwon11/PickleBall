@@ -1,9 +1,15 @@
 "use client";
-import { DayPicker } from "react-day-picker";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { EventForm } from '@/components/EventForm';
+import { ClubForm } from '@/components/ClubForm'
+import { ClubList } from '@/components/ClubList'
+import { EventList } from '@/components/EventList'
+import { EventForm } from '@/components/EventForm'
+
+// const CLUB_ID = 'fb0d730f-5237-4e81-b353-a43b0d753707';
+// const CLUB_ID = 'fb0d730f-5237-4e81-b353-a43b0d753707'; // kris and chan
+const CLUB_ID = '1daf40b9-3814-437f-b113-fda8fb5360e9'; // kris and chan #2
 
 const Home = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -58,11 +64,17 @@ const Home = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h2 className="text-xl font-bold mb-4">Create Event</h2>
+              <h2 className="text-xl font-bold mb-4">Create Club</h2>
+              <ClubForm onSuccess={() => window.location.reload()} />
+              
+              <h2 className="text-xl font-bold mt-8 mb-4">Available Clubs</h2>
+              <ClubList />
             </div>
             
             <div>
-              <h2 className="text-xl font-bold mb-4">Events View</h2>
+              <h2 className="text-xl font-bold mb-4">Events</h2>
+              <EventList clubId={CLUB_ID} />
+              <EventForm clubId={CLUB_ID} />
             </div>
           </div>
         </div>
