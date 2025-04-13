@@ -20,7 +20,6 @@ type Participant = {
   id: string;
   user_id: string;
   is_waitlisted: boolean;
-  waitlist_position: number | null;
   profiles: Profile;
 };
 
@@ -33,7 +32,7 @@ export const EventView = ({ event }: EventViewProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isWaitlisted, setIsWaitlisted] = useState(false);
-  const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
+  const [currentUserPosition, setCurrentUserPosition] = useState<number | null>(null);
 
   const fetchParticipants = async () => {
     const { data, error } = await supabase
@@ -42,7 +41,7 @@ export const EventView = ({ event }: EventViewProps) => {
         id,
         user_id,
         is_waitlisted,
-        waitlist_position,
+        created_at,
         profiles!inner (
           full_name,
           email
@@ -50,7 +49,7 @@ export const EventView = ({ event }: EventViewProps) => {
       `)
       .eq('event_id', event.id)
       .order('is_waitlisted', { ascending: true })
-      .order('waitlist_position', { ascending: true });
+      .order('created_at', { ascending: true });
 
     if (error) {
       console.error('Error fetching participants:', error);
@@ -63,7 +62,7 @@ export const EventView = ({ event }: EventViewProps) => {
       return;
     }
 
-    // Transform the data to match our types
+    // Transform the data to match our types and calculate waitlist positions
     const transformedData = data.map(item => {
       const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
       return {
@@ -76,6 +75,15 @@ export const EventView = ({ event }: EventViewProps) => {
     }) as Participant[];
 
     setParticipants(transformedData);
+
+    // Update current user's waitlist position
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const position = transformedData
+        .filter(p => p.is_waitlisted)
+        .findIndex(p => p.user_id === user.id) + 1;
+      setCurrentUserPosition(position || null);
+    }
   };
 
   const checkSignUpStatus = async () => {
@@ -97,7 +105,6 @@ export const EventView = ({ event }: EventViewProps) => {
     if (data) {
       setIsSignedUp(true);
       setIsWaitlisted(data.is_waitlisted);
-      setWaitlistPosition(data.waitlist_position);
     }
   };
 
@@ -156,7 +163,6 @@ export const EventView = ({ event }: EventViewProps) => {
 
     setIsSignedUp(false);
     setIsWaitlisted(false);
-    setWaitlistPosition(null);
     await fetchParticipants();
     setIsLoading(false);
   };
@@ -189,7 +195,7 @@ export const EventView = ({ event }: EventViewProps) => {
           <div className="space-y-2">
             {isWaitlisted ? (
               <p className="text-yellow-600">
-                You are on the waitlist (Position {waitlistPosition})
+                You are on the waitlist (Position #{currentUserPosition})
               </p>
             ) : (
               <p className="text-green-600">You are signed up for this event!</p>
@@ -205,7 +211,7 @@ export const EventView = ({ event }: EventViewProps) => {
         ) : (
           <button
             onClick={handleSignUp}
-            disabled={isLoading || (isFull && !isWaitlisted)}
+            disabled={isLoading || (isFull && isWaitlisted)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
           >
             {isLoading ? 'Signing up...' : isFull ? 'Join Waitlist' : 'Sign Up'}
@@ -224,7 +230,11 @@ export const EventView = ({ event }: EventViewProps) => {
               <div className="w-6 h-6 rounded-full bg-gray-300" />
               <span className={participant.is_waitlisted ? 'text-gray-500' : ''}>
                 {participant.profiles.full_name}
-                {participant.is_waitlisted && ` (Waitlist #${participant.waitlist_position})`}
+                {participant.is_waitlisted && ` (Waitlist #${
+                  participants
+                    .filter(p => p.is_waitlisted)
+                    .findIndex(p => p.id === participant.id) + 1
+                })`}
               </span>
             </div>
           ))}
