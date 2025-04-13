@@ -61,7 +61,6 @@ const Home = () => {
               Sign Out
             </button>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h2 className="text-xl font-bold mb-4">Create Club</h2>
