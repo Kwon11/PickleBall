@@ -6,13 +6,11 @@ import { ClubForm } from '@/components/ClubForm'
 import { ClubList } from '@/components/ClubList'
 import { EventList } from '@/components/EventList'
 import { EventForm } from '@/components/EventForm'
-
-// const CLUB_ID = 'fb0d730f-5237-4e81-b353-a43b0d753707';
-// const CLUB_ID = 'fb0d730f-5237-4e81-b353-a43b0d753707'; // kris and chan
-const CLUB_ID = '1daf40b9-3814-437f-b113-fda8fb5360e9'; // kris and chan #2
+import { ClubSelector } from '@/components/ClubSelector'
 
 const Home = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [selectedClubId, setSelectedClubId] = useState<string>('');
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -61,6 +59,7 @@ const Home = () => {
               Sign Out
             </button>
           </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h2 className="text-xl font-bold mb-4">Create Club</h2>
@@ -72,8 +71,13 @@ const Home = () => {
             
             <div>
               <h2 className="text-xl font-bold mb-4">Events</h2>
-              <EventList clubId={CLUB_ID} />
-              <EventForm clubId={CLUB_ID} />
+              <ClubSelector onClubSelect={setSelectedClubId} />
+              {selectedClubId && (
+                <>
+                  <EventList clubId={selectedClubId} />
+                  <EventForm clubId={selectedClubId} />
+                </>
+              )}
             </div>
           </div>
         </div>
