@@ -67,15 +67,15 @@ export const ClubSelector = ({ onClubSelect }: ClubSelectorProps) => {
   }
 
   return (
-    <div className="mb-4">
-      <label htmlFor="club-select" className="block text-sm font-medium mb-1">
+    <div className="mb-4 flex justify-between items-center">
+      <label htmlFor="club-select" className="block text-md font-medium mb-1">
         Select Club
       </label>
       <select
         id="club-select"
         value={selectedClubId}
         onChange={handleClubChange}
-        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-black h-[80%]"
       >
         {clubs.map(club => (
           <option key={club.id} value={club.id}>

@@ -58,7 +58,7 @@ const Home = () => {
           
           <main className="flex-1 ml-64 p-8">
             <div className="max-w-4xl mx-auto">
-              <div className="mb-8">
+              <div className="mb-8 flex justify-between">
                 <h2 className="text-2xl font-bold text-primary mb-4">Events</h2>
                 <ClubSelector onClubSelect={setSelectedClubId} />
               </div>
