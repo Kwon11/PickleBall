@@ -2,11 +2,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { ClubForm } from '@/components/ClubForm'
-import { ClubList } from '@/components/ClubList'
 import { EventList } from '@/components/EventList'
 import { EventForm } from '@/components/EventForm'
 import { ClubSelector } from '@/components/ClubSelector'
+import { Navigation } from '@/components/Navigation'
 
 const Home = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -40,48 +39,41 @@ const Home = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background">
       {!user ? (
         <div className="flex justify-center items-center min-h-screen">
-          <button
-            onClick={handleSignIn}
-            className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition-colors text-lg font-medium"
-          >
-            Sign in with Google
-          </button>
-        </div>
-      ) : (
-        <div>
-          <div className="mb-6 flex justify-between items-center">
-            <p className="text-secondary">Welcome, {user.email}</p>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-primary mb-6">Pickleball</h1>
             <button
-              onClick={handleSignOut}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+              onClick={handleSignIn}
+              className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition-colors text-lg font-medium"
             >
-              Sign Out
+              Sign in with Google
             </button>
           </div>
+        </div>
+      ) : (
+        <div className="flex">
+          <Navigation user={user} onSignOut={handleSignOut} />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h2 className="text-2xl font-bold text-primary mb-6">Create Club</h2>
-              <ClubForm onSuccess={() => window.location.reload()} />
-              
-              <h2 className="text-2xl font-bold text-primary mt-12 mb-6">Available Clubs</h2>
-              <ClubList />
-            </div>
-            
-            <div>
-              <h2 className="text-2xl font-bold text-primary mb-6">Events</h2>
-              <ClubSelector onClubSelect={setSelectedClubId} />
+          <main className="flex-1 ml-64 p-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-primary mb-4">Events</h2>
+                <ClubSelector onClubSelect={setSelectedClubId} />
+              </div>
+
               {selectedClubId && (
-                <>
+                <div className="space-y-8">
                   <EventList clubId={selectedClubId} />
-                  <EventForm clubId={selectedClubId} />
-                </>
+                  <div className="border border-custom p-6 rounded-lg shadow-sm bg-background">
+                    <h3 className="text-xl font-bold text-primary mb-4">Create New Event</h3>
+                    <EventForm clubId={selectedClubId} />
+                  </div>
+                </div>
               )}
             </div>
-          </div>
+          </main>
         </div>
       )}
     </div>
