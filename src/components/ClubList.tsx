@@ -79,17 +79,17 @@ export const ClubList = () => {
         const membership = myMemberships.find(m => m.club_id === club.id);
         
         return (
-          <div key={club.id} className="border p-4 rounded">
-            <h3 className="text-lg font-semibold">{club.name}</h3>
-            <p className="text-gray-600">{club.description}</p>
+          <div key={club.id} className="border border-custom p-6 rounded-lg shadow-sm bg-background">
+            <h3 className="text-xl font-bold text-primary">{club.name}</h3>
+            <p className="text-secondary mt-2">{club.description}</p>
             {membership ? (
-              <p className="mt-2 text-green-600">
+              <p className="mt-3 text-green-500 font-medium">
                 You're a {membership.role} of this club
               </p>
             ) : (
               <button
                 onClick={() => handleJoinClub(club.id)}
-                className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                className="mt-3 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
               >
                 Join Club
               </button>

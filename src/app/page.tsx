@@ -40,37 +40,39 @@ const Home = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-6 max-w-7xl mx-auto">
       {!user ? (
-        <button
-          onClick={handleSignIn}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Sign in with Google
-        </button>
+        <div className="flex justify-center items-center min-h-screen">
+          <button
+            onClick={handleSignIn}
+            className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition-colors text-lg font-medium"
+          >
+            Sign in with Google
+          </button>
+        </div>
       ) : (
         <div>
-          <div className="mb-4 flex justify-between items-center">
-            <p>Welcome, {user.email}</p>
+          <div className="mb-6 flex justify-between items-center">
+            <p className="text-secondary">Welcome, {user.email}</p>
             <button
               onClick={handleSignOut}
-              className="bg-red-500 text-white px-4 py-2 rounded"
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
             >
               Sign Out
             </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h2 className="text-xl font-bold mb-4">Create Club</h2>
+              <h2 className="text-2xl font-bold text-primary mb-6">Create Club</h2>
               <ClubForm onSuccess={() => window.location.reload()} />
               
-              <h2 className="text-xl font-bold mt-8 mb-4">Available Clubs</h2>
+              <h2 className="text-2xl font-bold text-primary mt-12 mb-6">Available Clubs</h2>
               <ClubList />
             </div>
             
             <div>
-              <h2 className="text-xl font-bold mb-4">Events</h2>
+              <h2 className="text-2xl font-bold text-primary mb-6">Events</h2>
               <ClubSelector onClubSelect={setSelectedClubId} />
               {selectedClubId && (
                 <>

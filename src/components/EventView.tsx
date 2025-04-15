@@ -179,31 +179,31 @@ export const EventView = ({ event }: EventViewProps) => {
   console.log('participant', participants);
 
   return (
-    <div className="border p-4 rounded shadow">
-      <h3 className="text-lg font-bold">{event.title}</h3>
-      <p className="text-gray-600 mt-1">{event.description}</p>
-      <div className="mt-2 text-sm">
-        <p>Date: {new Date(event.event_date).toLocaleString()}</p>
-        <p>Players: {currentParticipants}/{event.max_players}</p>
+    <div className="border border-custom p-6 rounded-lg shadow-sm bg-background">
+      <h3 className="text-xl font-bold text-primary">{event.title}</h3>
+      <p className="text-secondary mt-2">{event.description}</p>
+      <div className="mt-4 text-sm space-y-1">
+        <p className="text-secondary">Date: {new Date(event.event_date).toLocaleString()}</p>
+        <p className="text-secondary">Players: {currentParticipants}/{event.max_players}</p>
         {waitlistedParticipants.length > 0 && (
-          <p>Waitlist: {waitlistedParticipants.length} waiting</p>
+          <p className="text-secondary">Waitlist: {waitlistedParticipants.length} waiting</p>
         )}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-6">
         {isSignedUp ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {isWaitlisted ? (
-              <p className="text-yellow-600">
+              <p className="text-yellow-500 font-medium">
                 You are on the waitlist (Position #{currentUserPosition})
               </p>
             ) : (
-              <p className="text-green-600">You are signed up for this event!</p>
+              <p className="text-green-500 font-medium">You are signed up for this event!</p>
             )}
             <button
               onClick={handleCancelSignUp}
               disabled={isLoading}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50"
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:opacity-50 transition-colors"
             >
               {isLoading ? 'Canceling...' : 'Cancel Sign-up'}
             </button>
@@ -212,23 +212,25 @@ export const EventView = ({ event }: EventViewProps) => {
           <button
             onClick={handleSignUp}
             disabled={isLoading || (isFull && isWaitlisted)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors"
           >
             {isLoading ? 'Signing up...' : isFull ? 'Join Waitlist' : 'Sign Up'}
           </button>
         )}
       </div>
 
-      <div className="mt-4">
-        <h4 className="font-semibold mb-2">Participants:</h4>
-        <div className="space-y-2">
+      <div className="mt-6">
+        <h4 className="font-semibold text-primary mb-3">Participants:</h4>
+        <div className="space-y-3">
           {participants.map(participant => (
             <div
               key={participant.id}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-3"
             >
-              <div className="w-6 h-6 rounded-full bg-gray-300" />
-              <span className={participant.is_waitlisted ? 'text-gray-500' : ''}>
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-gray-600">
+                {participant.profiles.full_name.charAt(0)}
+              </div>
+              <span className={participant.is_waitlisted ? 'text-tertiary' : 'text-secondary'}>
                 {participant.profiles.full_name}
                 {participant.is_waitlisted && ` (Waitlist #${
                   participants
