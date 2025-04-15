@@ -1,15 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-
-type Event = {
-  id: string;
-  title: string;
-  description: string;
-  event_date: string;
-  max_players: number;
-  created_by: string;
-};
+import { supabase } from '@/lib/supabase/client';
+import { Event } from "@/types/event";
 
 type Profile = {
   full_name: string;
@@ -23,9 +15,9 @@ type Participant = {
   profiles: Profile;
 };
 
-type EventViewProps = {
+interface EventViewProps {
   event: Event;
-};
+}
 
 export const EventView = ({ event }: EventViewProps) => {
   const [isSignedUp, setIsSignedUp] = useState(false);
@@ -109,62 +101,40 @@ export const EventView = ({ event }: EventViewProps) => {
   };
 
   const handleSignUp = async () => {
-    setIsLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('No user logged in');
-      setIsLoading(false);
-      return;
-    }
+    if (!user) return;
 
-    const currentParticipants = participants.filter(p => !p.is_waitlisted).length;
-    const isFull = currentParticipants >= event.max_players;
-
-    const { error } = await supabase
-      .from('event_participants')
-      .insert([{
-        event_id: event.id,
-        user_id: user.id,
-        is_waitlisted: isFull
-      }]);
+    const { error } = await supabase.from("event_participants").insert({
+      event_id: event.id,
+      user_id: user.id,
+      is_waitlisted: false,
+    });
 
     if (error) {
-      console.error('Error signing up for event:', error);
-      setIsLoading(false);
+      console.error("Error signing up:", error);
       return;
     }
 
     setIsSignedUp(true);
-    setIsWaitlisted(isFull);
-    await fetchParticipants();
-    setIsLoading(false);
   };
 
   const handleCancelSignUp = async () => {
-    setIsLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('No user logged in');
-      setIsLoading(false);
-      return;
-    }
+    if (!user) return;
 
     const { error } = await supabase
-      .from('event_participants')
+      .from("event_participants")
       .delete()
-      .eq('event_id', event.id)
-      .eq('user_id', user.id);
+      .eq("event_id", event.id)
+      .eq("user_id", user.id);
 
     if (error) {
-      console.error('Error canceling sign up:', error);
-      setIsLoading(false);
+      console.error("Error canceling sign up:", error);
       return;
     }
 
     setIsSignedUp(false);
     setIsWaitlisted(false);
-    await fetchParticipants();
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -179,77 +149,61 @@ export const EventView = ({ event }: EventViewProps) => {
   console.log('participant', participants);
 
   return (
-    <div className="border border-custom p-6 rounded-lg shadow-sm bg-card">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left column - Event details */}
+    <div className="border border-slate-700 rounded-lg p-4 bg-slate-800 text-slate-100">
+      <div className="flex justify-between items-start">
         <div>
-          <h3 className="text-xl font-bold text-primary">{event.title}</h3>
-          <p className="text-secondary mt-2">{event.description}</p>
-          <div className="mt-4 text-sm space-y-1">
-            <p className="text-secondary">Date: {new Date(event.event_date).toLocaleString()}</p>
-            <p className="text-secondary">Players: {currentParticipants}/{event.max_players}</p>
-            {waitlistedParticipants.length > 0 && (
-              <p className="text-secondary">Waitlist: {waitlistedParticipants.length} waiting</p>
-            )}
+          <h3 className="text-xl font-bold text-white">{event.title}</h3>
+          <p className="text-slate-300 mt-1">{event.description}</p>
+          <div className="mt-2 text-slate-400">
+            <p>Date: {new Date(event.event_date).toLocaleDateString()}</p>
+            <p>Time: {new Date(event.event_date).toLocaleTimeString()}</p>
+            <p>
+              Players: {currentParticipants}/{event.max_players}
+            </p>
           </div>
         </div>
-
-        {/* Right column - Actions and participants */}
-        <div className="space-y-6">
-          <div>
-            {isSignedUp ? (
-              <div className="space-y-3">
-                {isWaitlisted ? (
-                  <p className="text-yellow-400 font-medium">
-                    You are on the waitlist (Position #{currentUserPosition})
-                  </p>
-                ) : (
-                  <p className="text-green-400 font-medium">You are signed up for this event!</p>
-                )}
-                <button
-                  onClick={handleCancelSignUp}
-                  disabled={isLoading}
-                  className="w-full bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:opacity-50 transition-colors"
-                >
-                  {isLoading ? 'Canceling...' : 'Cancel Sign-up'}
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleSignUp}
-                disabled={isLoading || (isFull && isWaitlisted)}
-                className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors"
-              >
-                {isLoading ? 'Signing up...' : isFull ? 'Join Waitlist' : 'Sign Up'}
-              </button>
-            )}
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-primary mb-3">Participants:</h4>
-            <div className="space-y-3">
-              {participants.map(participant => (
-                <div
-                  key={participant.id}
-                  className="flex items-center space-x-3"
-                >
-                  <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-medium text-slate-300">
-                    {participant.profiles.full_name.charAt(0)}
-                  </div>
-                  <span className={participant.is_waitlisted ? 'text-tertiary' : 'text-secondary'}>
-                    {participant.profiles.full_name}
-                    {participant.is_waitlisted && ` (Waitlist #${
-                      participants
-                        .filter(p => p.is_waitlisted)
-                        .findIndex(p => p.id === participant.id) + 1
-                    })`}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="flex flex-col space-y-2">
+          {!isSignedUp && !isWaitlisted && (
+            <button
+              onClick={handleSignUp}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Sign Up
+            </button>
+          )}
+          {isSignedUp && (
+            <button
+              onClick={handleCancelSignUp}
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+          {isWaitlisted && (
+            <button
+              onClick={handleCancelSignUp}
+              className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
+            >
+              Cancel Waitlist
+            </button>
+          )}
         </div>
       </div>
+      {event.event_participants && event.event_participants.length > 0 && (
+        <div className="mt-4">
+          <h4 className="text-sm font-semibold text-slate-300 mb-2">Participants:</h4>
+          <div className="flex flex-wrap gap-2">
+            {event.event_participants.map((participant) => (
+              <div
+                key={participant.user_id}
+                className="bg-slate-700 text-slate-200 px-3 py-1 rounded-full text-sm"
+              >
+                {participant.user_id.slice(0, 1).toUpperCase()}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 
