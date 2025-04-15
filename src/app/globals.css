@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 .rdp-root {
-  --rdp-accent-color: yellow;
+  --rdp-accent-color: #3b82f6;
   height: 100vh;
 }
 
@@ -25,27 +25,18 @@
 }
 
 .rdp-day {
-  border: 1px solid white;
+  border: 1px solid #1e293b;
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --text-primary: #171717;
-  --text-secondary: #4b5563;
-  --text-tertiary: #6b7280;
-  --border-color: #e5e7eb;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #f3f4f6;
-    --text-primary: #f3f4f6;
-    --text-secondary: #d1d5db;
-    --text-tertiary: #9ca3af;
-    --border-color: #374151;
-  }
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border-color: #1e293b;
+  --card-bg: #1e293b;
+  --hover-bg: #334155;
 }
 
 body {
@@ -66,4 +57,12 @@ body {
 
 .border-custom {
   border-color: var(--border-color);
+}
+
+.bg-card {
+  background-color: var(--card-bg);
+}
+
+.hover-bg {
+  background-color: var(--hover-bg);
 }

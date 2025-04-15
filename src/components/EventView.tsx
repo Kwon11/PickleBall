@@ -179,7 +179,7 @@ export const EventView = ({ event }: EventViewProps) => {
   console.log('participant', participants);
 
   return (
-    <div className="border border-custom p-6 rounded-lg shadow-sm bg-background">
+    <div className="border border-custom p-6 rounded-lg shadow-sm bg-card">
       <h3 className="text-xl font-bold text-primary">{event.title}</h3>
       <p className="text-secondary mt-2">{event.description}</p>
       <div className="mt-4 text-sm space-y-1">
@@ -194,11 +194,11 @@ export const EventView = ({ event }: EventViewProps) => {
         {isSignedUp ? (
           <div className="space-y-3">
             {isWaitlisted ? (
-              <p className="text-yellow-500 font-medium">
+              <p className="text-yellow-400 font-medium">
                 You are on the waitlist (Position #{currentUserPosition})
               </p>
             ) : (
-              <p className="text-green-500 font-medium">You are signed up for this event!</p>
+              <p className="text-green-400 font-medium">You are signed up for this event!</p>
             )}
             <button
               onClick={handleCancelSignUp}
@@ -227,7 +227,7 @@ export const EventView = ({ event }: EventViewProps) => {
               key={participant.id}
               className="flex items-center space-x-3"
             >
-              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-gray-600">
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-medium text-slate-300">
                 {participant.profiles.full_name.charAt(0)}
               </div>
               <span className={participant.is_waitlisted ? 'text-tertiary' : 'text-secondary'}>

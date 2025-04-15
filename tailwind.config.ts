@@ -15,6 +15,8 @@ export default {
         "text-secondary": "var(--text-secondary)",
         "text-tertiary": "var(--text-tertiary)",
         border: "var(--border-color)",
+        card: "var(--card-bg)",
+        hover: "var(--hover-bg)",
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "-apple-system", "sans-serif"],
