@@ -1,207 +1,251 @@
 "use client";
 
-import { useState, useRef } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import { Event } from '@/types/event';
+import { useState } from "react";
+import { CalendarView as CalendarViewType } from "@/types/calendar";
+import { Event } from "@/types/event";
 
-type CalendarViewProps = {
+interface CalendarViewProps {
   events: Event[];
   onEventClick: (event: Event) => void;
-};
+}
 
 export const CalendarView = ({ events, onEventClick }: CalendarViewProps) => {
-  const [view, setView] = useState<'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'>('dayGridMonth');
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const calendarRef = useRef<FullCalendar>(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<CalendarViewType>(CalendarViewType.MONTH);
 
-  const calendarEvents = events.map(event => ({
-    id: event.id,
-    title: event.title,
-    start: event.event_date,
-    extendedProps: {
-      description: event.description,
-      maxPlayers: event.max_players,
-      currentParticipants: event.participants?.length || 0,
-      isFull: (event.participants?.length || 0) >= event.max_players
+  const handlePrev = () => {
+    const newDate = new Date(currentDate);
+    if (view === CalendarViewType.MONTH) {
+      newDate.setMonth(newDate.getMonth() - 1);
+    } else if (view === CalendarViewType.WEEK) {
+      newDate.setDate(newDate.getDate() - 7);
+    } else {
+      newDate.setDate(newDate.getDate() - 1);
     }
-  }));
+    setCurrentDate(newDate);
+  };
 
-  const handleViewChange = (newView: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay') => {
-    setView(newView);
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      calendarApi.changeView(newView);
+  const handleNext = () => {
+    const newDate = new Date(currentDate);
+    if (view === CalendarViewType.MONTH) {
+      newDate.setMonth(newDate.getMonth() + 1);
+    } else if (view === CalendarViewType.WEEK) {
+      newDate.setDate(newDate.getDate() + 7);
+    } else {
+      newDate.setDate(newDate.getDate() + 1);
+    }
+    setCurrentDate(newDate);
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const formatDate = (date: Date) => {
+    if (view === CalendarViewType.MONTH) {
+      return date.toLocaleString("default", { month: "long", year: "numeric" });
+    } else if (view === CalendarViewType.WEEK) {
+      const start = new Date(date);
+      start.setDate(start.getDate() - start.getDay());
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+    } else {
+      return date.toLocaleDateString();
     }
   };
 
-  const eventContent = (arg: { event: { 
-    title: string;
-    start: string;
-    extendedProps: {
-      description: string;
-      maxPlayers: number;
-      currentParticipants: number;
-      isFull: boolean;
-    };
-  }}) => {
-    const event = arg.event;
-    const isFull = event.extendedProps.isFull;
-    const currentParticipants = event.extendedProps.currentParticipants;
-    const maxPlayers = event.extendedProps.maxPlayers;
+  const renderCalendar = () => {
+    if (view === CalendarViewType.MONTH) {
+      return renderMonthView();
+    } else if (view === CalendarViewType.WEEK) {
+      return renderWeekView();
+    } else {
+      return renderDayView();
+    }
+  };
 
-    if (view === 'dayGridMonth') {
-      return (
-        <div className="p-1">
-          <div className="text-sm font-medium truncate">{event.title}</div>
-          <div className="text-xs">
-            {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            {isFull && <span className="ml-1 text-red-500">(Full)</span>}
-          </div>
+  const renderMonthView = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDay = firstDay.getDay();
+
+    const days = [];
+    for (let i = 0; i < startingDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-24 border p-2"></div>);
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      const date = new Date(year, month, i);
+      const dayEvents = events.filter(
+        (event) =>
+          new Date(event.event_date).toDateString() === date.toDateString()
+      );
+
+      days.push(
+        <div
+          key={i}
+          className="h-24 border p-2 hover:bg-gray-50 cursor-pointer"
+          onClick={() => {
+            if (dayEvents.length > 0) {
+              onEventClick(dayEvents[0]);
+            }
+          }}
+        >
+          <div className="font-bold">{i}</div>
+          {dayEvents.map((event) => (
+            <div
+              key={event.id}
+              className="text-sm bg-blue-100 rounded p-1 mb-1 truncate"
+            >
+              {event.title}
+            </div>
+          ))}
         </div>
       );
     }
 
-    if (view === 'timeGridWeek') {
-      return (
-        <div className="p-1">
-          <div className="text-sm font-medium truncate">{event.title}</div>
-          <div className="text-xs">
-            {currentParticipants}/{maxPlayers} players
-          </div>
-        </div>
-      );
-    }
-
-    // Day view
     return (
-      <div className="p-2">
-        <div className="text-sm font-medium">{event.title}</div>
-        <div className="text-xs mt-1">{event.extendedProps.description}</div>
-        <div className="text-xs mt-1">
-          {currentParticipants}/{maxPlayers} players
-          {isFull && <span className="ml-1 text-red-500">(Full)</span>}
-        </div>
+      <div className="grid grid-cols-7 gap-0">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+          <div key={day} className="text-center font-bold p-2 border">
+            {day}
+          </div>
+        ))}
+        {days}
       </div>
     );
   };
 
-  const handleEventClick = (info: { event: { id: string } }) => {
-    const event = events.find(e => e.id === info.event.id);
-    if (event) {
-      setSelectedEvent(event);
-      onEventClick(event);
+  const renderWeekView = () => {
+    const start = new Date(currentDate);
+    start.setDate(start.getDate() - start.getDay());
+    const days = [];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(start);
+      date.setDate(date.getDate() + i);
+      const dayEvents = events.filter(
+        (event) =>
+          new Date(event.event_date).toDateString() === date.toDateString()
+      );
+
+      days.push(
+        <div key={i} className="flex-1 border p-2">
+          <div className="font-bold">
+            {date.toLocaleDateString("default", { weekday: "short" })}
+          </div>
+          <div className="text-sm">{date.getDate()}</div>
+          {dayEvents.map((event) => (
+            <div
+              key={event.id}
+              className="text-sm bg-blue-100 rounded p-1 mb-1 truncate cursor-pointer"
+              onClick={() => onEventClick(event)}
+            >
+              {event.title}
+            </div>
+          ))}
+        </div>
+      );
     }
+
+    return <div className="flex">{days}</div>;
+  };
+
+  const renderDayView = () => {
+    const dayEvents = events.filter(
+      (event) =>
+        new Date(event.event_date).toDateString() ===
+        currentDate.toDateString()
+    );
+
+    return (
+      <div className="border p-4">
+        <div className="font-bold mb-4">
+          {currentDate.toLocaleDateString("default", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </div>
+        {dayEvents.map((event) => (
+          <div
+            key={event.id}
+            className="bg-blue-100 rounded p-2 mb-2 cursor-pointer"
+            onClick={() => onEventClick(event)}
+          >
+            <div className="font-bold">{event.title}</div>
+            <div className="text-sm">
+              {new Date(event.event_date).toLocaleTimeString()}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
-    <div className="flex h-[80vh]">
-      <div className={`${selectedEvent ? 'w-2/3' : 'w-full'} bg-card rounded-lg p-4`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-primary">Calendar</h2>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => handleViewChange('dayGridMonth')}
-              className={`px-3 py-1 rounded-md ${
-                view === 'dayGridMonth' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'
-              }`}
-            >
-              Month
-            </button>
-            <button
-              onClick={() => handleViewChange('timeGridWeek')}
-              className={`px-3 py-1 rounded-md ${
-                view === 'timeGridWeek' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'
-              }`}
-            >
-              Week
-            </button>
-            <button
-              onClick={() => handleViewChange('timeGridDay')}
-              className={`px-3 py-1 rounded-md ${
-                view === 'timeGridDay' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'
-              }`}
-            >
-              Day
-            </button>
-          </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="flex space-x-2">
+          <button
+            onClick={handlePrev}
+            className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600"
+          >
+            Prev
+          </button>
+          <button
+            onClick={handleToday}
+            className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600"
+          >
+            Today
+          </button>
+          <button
+            onClick={handleNext}
+            className="px-3 py-1 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600"
+          >
+            Next
+          </button>
         </div>
-
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView={view}
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: ''
-          }}
-          events={calendarEvents}
-          eventContent={eventContent}
-          eventClick={handleEventClick}
-          height="100%"
-          slotMinTime="06:00:00"
-          slotMaxTime="22:00:00"
-          allDaySlot={false}
-          eventTimeFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }}
-          themeSystem="standard"
-          slotDuration="01:00:00"
-          slotLabelInterval="01:00"
-          slotLabelFormat={{
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }}
-          expandRows={true}
-          stickyHeaderDates={true}
-          nowIndicator={true}
-          dayMaxEvents={true}
-          weekends={true}
-          dayHeaderFormat={{
-            weekday: 'short',
-            month: 'numeric',
-            day: 'numeric'
-          }}
-        />
+        <div className="text-xl font-bold">{formatDate(currentDate)}</div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setView(CalendarViewType.MONTH)}
+            className={`px-3 py-1 rounded-md ${
+              view === CalendarViewType.MONTH
+                ? "bg-blue-500 text-white"
+                : "bg-slate-700 text-slate-300"
+            }`}
+          >
+            Month
+          </button>
+          <button
+            onClick={() => setView(CalendarViewType.WEEK)}
+            className={`px-3 py-1 rounded-md ${
+              view === CalendarViewType.WEEK
+                ? "bg-blue-500 text-white"
+                : "bg-slate-700 text-slate-300"
+            }`}
+          >
+            Week
+          </button>
+          <button
+            onClick={() => setView(CalendarViewType.DAY)}
+            className={`px-3 py-1 rounded-md ${
+              view === CalendarViewType.DAY
+                ? "bg-blue-500 text-white"
+                : "bg-slate-700 text-slate-300"
+            }`}
+          >
+            Day
+          </button>
+        </div>
       </div>
-
-      {selectedEvent && view === 'timeGridDay' && (
-        <div className="w-1/3 bg-card rounded-lg p-4 ml-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-primary">Event Details</h3>
-            <button
-              onClick={() => setSelectedEvent(null)}
-              className="text-slate-400 hover:text-slate-300"
-            >
-              ×
-            </button>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-semibold text-secondary">{selectedEvent.title}</h4>
-              <p className="text-sm text-tertiary mt-1">{selectedEvent.description}</p>
-            </div>
-            <div className="text-sm">
-              <p className="text-secondary">
-                Time: {new Date(selectedEvent.event_date).toLocaleTimeString([], { 
-                  hour: '2-digit', 
-                  minute: '2-digit',
-                  hour12: true 
-                })}
-              </p>
-              <p className="text-secondary">
-                Players: {selectedEvent.participants?.length || 0}/{selectedEvent.max_players}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {renderCalendar()}
     </div>
   );
 }; 
