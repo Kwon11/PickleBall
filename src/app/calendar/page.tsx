@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Event } from "@/types/event";
-import { CalendarWeekView } from "@/components/calendar/CalendarWeekView";
-import { CalendarDayView } from "@/components/calendar/CalendarDayView";
+import { EventViewDay } from "@/components/calendar/EventViewDay";
+import { EventViewWeek } from "@/components/calendar/EventViewWeek";
+import { EventViewMonth } from "@/components/calendar/EventViewMonth";
 
 export default function CalendarPage() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate] = useState(new Date());
   const [events, setEvents] = useState<Event[]>([]);
-  const [view, setView] = useState<"week" | "day">("week");
+  const [view, setView] = useState<"day" | "week" | "month">("week");
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -30,8 +32,11 @@ export default function CalendarPage() {
   };
 
   const handleEventClick = (event: Event) => {
-    setCurrentDate(new Date(event.event_date));
-    setView("day");
+    setSelectedEvent(event);
+  };
+
+  const handleCloseEvent = () => {
+    setSelectedEvent(null);
   };
 
   return (
@@ -41,13 +46,23 @@ export default function CalendarPage() {
         <div className="flex gap-4">
           <button
             className={`px-4 py-2 rounded ${
+              view === "month"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+            onClick={() => setView("month")}
+          >
+            Month
+          </button>
+          <button
+            className={`px-4 py-2 rounded ${
               view === "week"
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
             onClick={() => setView("week")}
           >
-            Week View
+            Week
           </button>
           <button
             className={`px-4 py-2 rounded ${
@@ -57,23 +72,57 @@ export default function CalendarPage() {
             }`}
             onClick={() => setView("day")}
           >
-            Day View
+            Day
           </button>
         </div>
       </div>
 
-      {view === "week" ? (
-        <CalendarWeekView
-          currentDate={currentDate}
-          events={events}
-          onEventClick={handleEventClick}
-        />
+      {selectedEvent ? (
+        <EventViewDay event={selectedEvent} onClose={handleCloseEvent} />
       ) : (
-        <CalendarDayView
-          currentDate={currentDate}
-          events={events}
-          onEventClick={handleEventClick}
-        />
+        <>
+          {view === "month" && (
+            <EventViewMonth
+              currentDate={currentDate}
+              events={events}
+              onEventClick={handleEventClick}
+            />
+          )}
+          {view === "week" && (
+            <EventViewWeek
+              currentDate={currentDate}
+              events={events}
+              onEventClick={handleEventClick}
+            />
+          )}
+          {view === "day" && (
+            <div className="bg-white rounded-lg shadow p-4">
+              <h2 className="text-xl font-semibold mb-4">
+                {currentDate.toLocaleDateString()}
+              </h2>
+              <div className="space-y-4">
+                {events
+                  .filter(
+                    (event) =>
+                      new Date(event.event_date).toDateString() ===
+                      currentDate.toDateString()
+                  )
+                  .map((event) => (
+                    <div
+                      key={event.id}
+                      className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleEventClick(event)}
+                    >
+                      <h3 className="font-medium">{event.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        {new Date(event.event_date).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
