@@ -1,15 +1,13 @@
-export type Event = {
+export interface Event {
   id: string;
   title: string;
   description: string;
   event_date: string;
   max_players: number;
+  club_id: string;
   created_by: string;
-  participants?: {
-    id: string;
-    profiles: {
-      full_name: string;
-    };
-    is_waitlisted: boolean;
+  created_at: string;
+  event_participants: {
+    user_id: string;
   }[];
-}; 
+} 

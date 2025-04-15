@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { EventView } from './EventView';
 import { CalendarView } from './CalendarView';
 import { Event } from '@/types/event';
@@ -12,17 +12,22 @@ type Club = {
   created_at: string;
 };
 
-type EventListProps = {
-  clubId: string;
-};
+interface EventListProps {
+  clubId?: string;
+  showOnlyUserEvents?: boolean;
+}
 
-export const EventList = ({ clubId }: EventListProps) => {
+export const EventList = ({ clubId, showOnlyUserEvents = false }: EventListProps) => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [club, setClub] = useState<Club | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [view, setView] = useState<'list' | 'calendar'>('list');
 
   const fetchClub = async () => {
+    if (!clubId) return;
+    
     const { data, error } = await supabase
       .from('clubs')
       .select('*')
@@ -37,38 +42,61 @@ export const EventList = ({ clubId }: EventListProps) => {
     setClub(data);
   };
 
-  const fetchEvents = async () => {
-    const { data, error } = await supabase
-      .from('club_events')
-      .select(`
-        *,
-        participants:event_participants(
-          id,
-          is_waitlisted,
-          profiles:profiles(
-            full_name
-          )
-        )
-      `)
-      .eq('club_id', clubId)
-      .order('event_date', { ascending: true });
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    if (error) {
-      console.error('Error fetching events:', error);
-      return;
-    }
+        let query = supabase
+          .from("club_events")
+          .select(`
+            *,
+            event_participants!inner (
+              user_id
+            )
+          `)
+          .order("event_date", { ascending: true });
 
-    setEvents(data || []);
-  };
+        // If clubId is provided, filter by club
+        if (clubId) {
+          query = query.eq("club_id", clubId);
+        }
+
+        // If showOnlyUserEvents is true, get the current user's ID and filter
+        if (showOnlyUserEvents) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            query = query.eq('event_participants.user_id', user.id);
+          }
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        setEvents(data || []);
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        setError("Failed to load events");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [clubId, showOnlyUserEvents]);
 
   useEffect(() => {
     fetchClub();
-    fetchEvents();
   }, [clubId]);
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
   };
+
+  if (loading) return <div>Loading events...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (events.length === 0) return <div>No events found</div>;
 
   return (
     <div className="space-y-4">
@@ -103,12 +131,9 @@ export const EventList = ({ clubId }: EventListProps) => {
 
       {view === 'list' ? (
         <>
-          {events.map(event => (
+          {events.map((event) => (
             <EventView key={event.id} event={event} />
           ))}
-          {events.length === 0 && (
-            <p className="text-gray-500">No events scheduled yet.</p>
-          )}
         </>
       ) : (
         <CalendarView events={events} onEventClick={handleEventClick} />
