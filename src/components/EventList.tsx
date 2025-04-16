@@ -49,7 +49,7 @@ export const EventList = ({ clubId, showOnlyUserEvents = false }: EventListProps
         setError(null);
 
         let query = supabase
-          .from("club_events")
+          .from("events")
           .select(`
             *,
             event_participants!inner (

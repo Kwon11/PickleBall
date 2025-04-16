@@ -22,7 +22,7 @@ export const EventForm = ({ clubId, onSuccess }: EventFormProps) => {
     if (!user) return;
 
     const { error } = await supabase
-      .from('club_events')
+      .from('events')
       .insert({
         club_id: clubId,
         title: formData.title,
