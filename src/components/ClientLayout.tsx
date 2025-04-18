@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
 import { Navigation } from "@/components/Navigation";
+import { SignInButton } from "@/components/SignInButton";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -33,7 +34,13 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {!user ? (
-        <main>{children}</main>
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-primary mb-4">Welcome to Pickleball</h1>
+            <p className="text-secondary text-lg">Sign in to manage your clubs and events</p>
+          </div>
+          <SignInButton />
+        </div>
       ) : (
         <div className="flex">
           <Navigation user={user} onSignOut={handleSignOut} />
