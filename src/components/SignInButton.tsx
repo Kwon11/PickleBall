@@ -1,19 +1,9 @@
 "use client";
 
-import { supabase } from "@/lib/supabase/client";
-
 export const SignInButton = () => {
   const handleSignIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      console.error("Error signing in:", error);
-    }
+    // This will be handled by a server action
+    window.location.href = '/api/auth/signin';
   };
 
   return (

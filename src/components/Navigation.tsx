@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { User } from "@supabase/supabase-js";
 import {
   HomeIcon,
   CalendarIcon,
@@ -11,7 +10,10 @@ import {
 } from "@heroicons/react/24/outline";
 
 interface NavigationProps {
-  user: User;
+  user: {
+    email: string;
+    id: string;
+  };
   onSignOut: () => Promise<void>;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createEvent } from '@/app/actions/events';
 
 type EventFormProps = {
   clubId: string;
@@ -22,41 +22,34 @@ export const EventForm = ({ clubId, onSuccess }: EventFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      await createEvent(
+        clubId,
+        formData.title,
+        formData.description,
+        formData.eventDate,
+        formData.eventEnd,
+        formData.location,
+        formData.maxPlayers,
+        formData.skillLevel,
+        formData.price
+      );
 
-    const { error } = await supabase
-      .from('events')
-      .insert({
-        club_id: clubId,
-        title: formData.title,
-        description: formData.description,
-        event_date: new Date(formData.eventDate).toISOString(),
-        event_end: new Date(formData.eventEnd).toISOString(),
-        location: formData.location,
-        max_players: formData.maxPlayers,
-        skill_level: formData.skillLevel,
-        price: formData.price,
-        created_by: user.id
+      setFormData({
+        title: '',
+        description: '',
+        eventDate: '',
+        eventEnd: '',
+        location: '',
+        maxPlayers: 1,
+        skillLevel: 'all',
+        price: 0,
       });
 
-    if (error) {
+      if (onSuccess) onSuccess();
+    } catch (error) {
       console.error('Error creating event:', error);
-      return;
     }
-
-    setFormData({
-      title: '',
-      description: '',
-      eventDate: '',
-      eventEnd: '',
-      location: '',
-      maxPlayers: 1,
-      skillLevel: 'all',
-      price: 0,
-    });
-
-    if (onSuccess) onSuccess();
   };
 
   return (
@@ -89,6 +82,34 @@ export const EventForm = ({ clubId, onSuccess }: EventFormProps) => {
       </div>
 
       <div>
+        <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700">
+          Event Date
+        </label>
+        <input
+          type="datetime-local"
+          id="eventDate"
+          value={formData.eventDate}
+          onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="eventEnd" className="block text-sm font-medium text-gray-700">
+          Event End
+        </label>
+        <input
+          type="datetime-local"
+          id="eventEnd"
+          value={formData.eventEnd}
+          onChange={(e) => setFormData({ ...formData, eventEnd: e.target.value })}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          required
+        />
+      </div>
+
+      <div>
         <label htmlFor="location" className="block text-sm font-medium text-gray-700">
           Location
         </label>
@@ -98,69 +119,23 @@ export const EventForm = ({ clubId, onSuccess }: EventFormProps) => {
           value={formData.location}
           onChange={(e) => setFormData({ ...formData, location: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          required
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700">
-            Start Time
-          </label>
-          <input
-            type="datetime-local"
-            id="eventDate"
-            value={formData.eventDate}
-            onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="eventEnd" className="block text-sm font-medium text-gray-700">
-            End Time
-          </label>
-          <input
-            type="datetime-local"
-            id="eventEnd"
-            value={formData.eventEnd}
-            onChange={(e) => setFormData({ ...formData, eventEnd: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="maxPlayers" className="block text-sm font-medium text-gray-700">
-            Maximum Players
-          </label>
-          <input
-            type="number"
-            id="maxPlayers"
-            min="1"
-            value={formData.maxPlayers}
-            onChange={(e) => setFormData({ ...formData, maxPlayers: parseInt(e.target.value) })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-            Price ($)
-          </label>
-          <input
-            type="number"
-            id="price"
-            min="0"
-            step="0.01"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
+      <div>
+        <label htmlFor="maxPlayers" className="block text-sm font-medium text-gray-700">
+          Maximum Players
+        </label>
+        <input
+          type="number"
+          id="maxPlayers"
+          value={formData.maxPlayers}
+          onChange={(e) => setFormData({ ...formData, maxPlayers: parseInt(e.target.value) })}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          min="1"
+          required
+        />
       </div>
 
       <div>
@@ -170,7 +145,7 @@ export const EventForm = ({ clubId, onSuccess }: EventFormProps) => {
         <select
           id="skillLevel"
           value={formData.skillLevel}
-          onChange={(e) => setFormData({ ...formData, skillLevel: e.target.value as any })}
+          onChange={(e) => setFormData({ ...formData, skillLevel: e.target.value as 'all' })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           <option value="all">All Levels</option>
@@ -178,6 +153,22 @@ export const EventForm = ({ clubId, onSuccess }: EventFormProps) => {
           <option value="intermediate">Intermediate</option>
           <option value="advanced">Advanced</option>
         </select>
+      </div>
+
+      <div>
+        <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+          Price
+        </label>
+        <input
+          type="number"
+          id="price"
+          value={formData.price}
+          onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          min="0"
+          step="0.01"
+          required
+        />
       </div>
 
       <button
