@@ -56,7 +56,7 @@ export const EventList = ({ clubId, showOnlyUserEvents = false }: EventListProps
               user_id
             )
           `)
-          .order("event_date", { ascending: true });
+          .order("event_start", { ascending: true });
 
         // If clubId is provided, filter by club
         if (clubId) {
